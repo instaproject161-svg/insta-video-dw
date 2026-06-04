@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DownloadResult } from "@/components/result-card";
+import { fetchInstagramMedia } from "@/lib/instagram-api";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,21 +12,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid Instagram URL" }, { status: 400 });
     }
 
-    // Mock response — replace with real API integration (e.g., RapidAPI)
-    const result: DownloadResult = {
-      type: "video",
-      thumbnail: "https://images.pexels.com/photos/1181676/pexels-photo-1181676.jpeg?auto=compress&cs=tinysrgb&w=320&h=240",
-      title: "Instagram Video",
-      author: "instagram_user",
-      duration: "0:45",
-      quality: "1080p HD",
-      fileSize: "18.4 MB",
-      downloadUrl: url,
-      mediaType: "video",
-    };
-
+    const result = await fetchInstagramMedia(url.trim(), "video");
     return NextResponse.json({ success: true, result });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    const status = message.includes("Rate limit") ? 429
+      : message.includes("private account") ? 403
+      : message.includes("not configured") ? 503
+      : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
