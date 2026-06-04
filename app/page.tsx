@@ -3,6 +3,7 @@ import { Hero } from "@/components/hero";
 import { Features } from "@/components/features";
 import { HowItWorks } from "@/components/how-it-works";
 import { FAQ } from "@/components/faq";
+import { SupportedFormats } from "@/components/supported-formats";
 import { Footer } from "@/components/footer";
 
 export default function Home() {
@@ -15,6 +16,9 @@ export default function Home() {
       </section>
       <section id="how-it-works">
         <HowItWorks />
+      </section>
+      <section id="formats">
+        <SupportedFormats />
       </section>
       <section id="faq">
         <FAQ />

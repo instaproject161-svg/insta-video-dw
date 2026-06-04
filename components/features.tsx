@@ -42,7 +42,7 @@ export function Features() {
             Why Choose ReelSave?
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto text-pretty">
-            The most reliable and user-friendly Instagram Reel downloader on the web.
+            The most reliable and user-friendly Instagram downloader platform on the web.
           </p>
         </div>
 

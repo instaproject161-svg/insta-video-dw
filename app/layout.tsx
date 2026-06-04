@@ -7,9 +7,14 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'ReelSave - Download Instagram Reels Fast & Free',
-  description: 'Download Instagram Reels in HD quality. Fast, free, and no watermark. Save your favorite reels instantly.',
-  generator: 'v0.app',
+  title: 'ReelSave - Instagram Downloader: Videos, Reels, Photos & More',
+  description: 'Download Instagram Videos, Reels, Photos, Stories, IGTV, Carousels, and Profile Pictures in HD quality. Free, fast, no watermark, no login required.',
+  keywords: ['instagram downloader', 'instagram reels downloader', 'instagram video downloader', 'instagram photo downloader', 'instagram story downloader', 'igtv downloader'],
+  openGraph: {
+    title: 'ReelSave - Instagram Downloader',
+    description: 'Download Instagram content in HD for free. Reels, Videos, Photos, Stories, IGTV, Carousels and Profile Pictures.',
+    type: 'website',
+  },
   icons: {
     icon: [
       {

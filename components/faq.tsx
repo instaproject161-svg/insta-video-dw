@@ -10,27 +10,35 @@ import {
 const faqs = [
   {
     question: "Is ReelSave free to use?",
-    answer: "Yes, ReelSave is completely free to use. There are no hidden fees, subscriptions, or premium features. You can download unlimited Instagram Reels without paying anything.",
+    answer: "Yes, ReelSave is completely free to use. There are no hidden fees, subscriptions, or premium tiers. You can download unlimited Instagram content without paying anything.",
   },
   {
     question: "Do I need to create an account?",
-    answer: "No, you don&apos;t need to create an account or log in. Simply paste the Instagram Reel URL and download directly. We believe in making things simple.",
+    answer: "No account or login is needed. Simply paste the Instagram URL and download directly. We believe in making things as simple as possible.",
+  },
+  {
+    question: "What content types can I download?",
+    answer: "You can download Instagram Reels, Videos, Photos, Stories, IGTV videos, Carousel posts (all images/videos at once), and full-size Profile Pictures.",
   },
   {
     question: "What video quality can I download?",
-    answer: "We provide the highest quality available for each Reel, typically in HD (1080p) or the original resolution uploaded by the creator.",
+    answer: "We provide the highest quality available for each piece of content, typically HD (1080p) or the original resolution uploaded by the creator.",
   },
   {
     question: "Is it safe to use ReelSave?",
-    answer: "Absolutely. We don&apos;t store any personal data, we don&apos;t require login credentials, and we don&apos;t install anything on your device. Your privacy is our priority.",
+    answer: "Absolutely. We never store your personal data, we do not require login credentials, and nothing is installed on your device. Your privacy is our priority.",
   },
   {
-    question: "Can I download Reels on my phone?",
-    answer: "Yes! ReelSave works perfectly on all devices including iPhones, Android phones, tablets, and computers. No app installation required.",
+    question: "Can I download on my phone?",
+    answer: "Yes! ReelSave works perfectly on all devices including iPhones, Android phones, tablets, and desktop computers. No app installation required.",
+  },
+  {
+    question: "Can I download from private accounts?",
+    answer: "No. We can only process publicly available content. Downloading from private accounts is not supported and would violate Instagram's terms of service.",
   },
   {
     question: "Why did my download fail?",
-    answer: "Downloads may fail if the Reel is from a private account, has been deleted, or if the URL is incorrect. Make sure to copy the complete URL and try again.",
+    answer: "Downloads may fail if the content is from a private account, has been deleted, or if the URL is incorrect. Make sure to copy the full URL and try again.",
   },
 ];
 
@@ -43,7 +51,7 @@ export function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="text-muted-foreground text-lg text-pretty">
-            Got questions? We&apos;ve got answers.
+            Got questions? We have answers.
           </p>
         </div>
 
