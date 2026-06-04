@@ -1,44 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { Play } from "lucide-react";
 import { DownloaderTabs } from "@/components/downloader-tabs";
 import { DownloadForm } from "@/components/download-form";
-import { DOWNLOADER_CONFIGS, DownloaderType } from "@/lib/downloader-types";
 import { AdBanner } from "@/components/ad-banner";
+import { DOWNLOADER_CONFIGS, DownloaderType } from "@/lib/downloader-types";
 
-export function Hero() {
-  const [activeTab, setActiveTab] = useState<DownloaderType>("reels");
-  const config = DOWNLOADER_CONFIGS[activeTab];
+interface DownloaderHeroProps {
+  type: DownloaderType;
+}
+
+export function DownloaderHero({ type }: DownloaderHeroProps) {
+  const config = DOWNLOADER_CONFIGS[type];
+  const Icon = config.icon;
 
   return (
     <section
       id="downloader"
-      className="relative min-h-[88vh] flex flex-col items-center justify-center px-4 py-12 overflow-hidden"
+      className="relative min-h-[80vh] flex flex-col items-center justify-center px-4 py-16 overflow-hidden"
     >
-      {/* Grid background */}
       <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
-
-      {/* Radial glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -top-20 right-0 w-64 h-64 bg-primary/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 -left-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-8">
-        {/* Brand icon */}
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 shadow-xl shadow-primary/10 animate-float">
-          <Play className="w-8 h-8 text-primary" fill="currentColor" />
+          <Icon className="w-8 h-8 text-primary" />
         </div>
 
-        {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-primary/20 text-xs font-semibold text-primary">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           Free • No Watermark • HD Quality • No Login
         </div>
 
-        {/* Heading */}
         <div className="space-y-4">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground text-balance leading-tight">
             {config.heading.split(" ").slice(0, -1).join(" ")}{" "}
@@ -49,15 +43,8 @@ export function Hero() {
           </p>
         </div>
 
-        {/* Tabs */}
-        <DownloaderTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {/* Form */}
-        <div className="w-full">
-          <DownloadForm config={config} />
-        </div>
-
-        {/* Ad slot */}
+        <DownloaderTabs activeTab={type} navigateOnChange />
+        <DownloadForm config={config} />
         <AdBanner slot="in-content" className="mt-2" />
       </div>
     </section>

@@ -7,30 +7,35 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'ReelSave - Instagram Downloader: Videos, Reels, Photos & More',
-  description: 'Download Instagram Videos, Reels, Photos, Stories, IGTV, Carousels, and Profile Pictures in HD quality. Free, fast, no watermark, no login required.',
-  keywords: ['instagram downloader', 'instagram reels downloader', 'instagram video downloader', 'instagram photo downloader', 'instagram story downloader', 'igtv downloader'],
+  metadataBase: new URL("https://reelsave.app"),
+  title: {
+    default: "ReelSave — Instagram Downloader: Videos, Reels, Photos & More",
+    template: "%s | ReelSave",
+  },
+  description: "Download Instagram Videos, Reels, Photos, Stories, IGTV, Carousels, and Profile Pictures in HD quality. Free, fast, no watermark, no login required.",
+  keywords: ["instagram downloader", "instagram reels downloader", "instagram video downloader", "instagram photo downloader", "instagram story downloader", "igtv downloader", "download instagram free"],
+  authors: [{ name: "ReelSave" }],
   openGraph: {
-    title: 'ReelSave - Instagram Downloader',
-    description: 'Download Instagram content in HD for free. Reels, Videos, Photos, Stories, IGTV, Carousels and Profile Pictures.',
-    type: 'website',
+    title: "ReelSave — Instagram Downloader",
+    description: "Download Instagram content in HD for free. Reels, Videos, Photos, Stories, IGTV, Carousels and Profile Pictures.",
+    type: "website",
+    url: "https://reelsave.app",
+    siteName: "ReelSave",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ReelSave — Instagram Downloader",
+    description: "Download Instagram Reels, Videos, Photos, Stories, IGTV and more for free in HD quality.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 },
   },
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: '/apple-icon.png',
   },
 }
 
@@ -41,6 +46,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="bg-background">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "ReelSave",
+              url: "https://reelsave.app",
+              description: "Free Instagram downloader for videos, reels, photos, stories, IGTV, carousels, and profile pictures.",
+              sameAs: [],
+            }),
+          }}
+        />
+      </head>
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

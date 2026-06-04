@@ -6,8 +6,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { FAQItem } from "@/lib/downloader-types";
 
-const faqs = [
+const defaultFaqs: FAQItem[] = [
   {
     question: "Is ReelSave free to use?",
     answer: "Yes, ReelSave is completely free to use. There are no hidden fees, subscriptions, or premium tiers. You can download unlimited Instagram content without paying anything.",
@@ -42,7 +43,11 @@ const faqs = [
   },
 ];
 
-export function FAQ() {
+interface FAQProps {
+  faqs?: FAQItem[];
+}
+
+export function FAQ({ faqs = defaultFaqs }: FAQProps) {
   return (
     <section className="py-20 px-4">
       <div className="max-w-3xl mx-auto">
@@ -55,12 +60,12 @@ export function FAQ() {
           </p>
         </div>
 
-        <Accordion type="single" collapsible className="space-y-4">
+        <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((faq, index) => (
             <AccordionItem
               key={index}
               value={`item-${index}`}
-              className="bg-card border border-border rounded-xl px-6 data-[state=open]:border-primary/50 transition-colors duration-300"
+              className="glass-card rounded-xl px-6 data-[state=open]:border-primary/40 transition-colors duration-200"
             >
               <AccordionTrigger className="text-left text-foreground hover:text-primary hover:no-underline py-5 text-base sm:text-lg font-medium">
                 {faq.question}
