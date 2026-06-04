@@ -13,9 +13,9 @@ const downloaderLinks = [
 
 const companyLinks = [
   { label: "Blog", href: "/blog" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Terms of Service", href: "/terms" },
   { label: "Contact", href: "/contact" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms of Service", href: "/terms-of-service" },
 ];
 
 export function Footer() {
@@ -34,7 +34,7 @@ export function Footer() {
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               The fastest and easiest way to download Instagram content in HD quality. Free, no watermark, no login required.
             </p>
-            <div className="flex gap-3 mt-5">
+            <div className="flex flex-wrap gap-2 mt-5">
               <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs text-primary font-medium">HD Quality</div>
               <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs text-primary font-medium">No Watermark</div>
               <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs text-primary font-medium">Free</div>
@@ -77,12 +77,20 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-10 pt-8 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} ReelSave. All rights reserved.
-          </p>
-          <p className="text-xs text-muted-foreground text-center sm:text-right max-w-md leading-relaxed">
-            ReelSave is not affiliated with Instagram or Meta Platforms, Inc. Only download content you have permission to use.
+        <div className="mt-10 pt-8 border-t border-border/40 flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              &copy; {new Date().getFullYear()} ReelSave. All rights reserved.
+            </p>
+            <div className="flex items-center gap-5">
+              <Link href="/privacy-policy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link href="/terms-of-service" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
+              <Link href="/contact" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground text-center leading-relaxed max-w-3xl mx-auto">
+            ReelSave is an independent tool and is not affiliated with Instagram&reg;, Meta Platforms, Inc., or their subsidiaries.
+            Users are responsible for ensuring they have permission to download and use any content.
           </p>
         </div>
       </div>
