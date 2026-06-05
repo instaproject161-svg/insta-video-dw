@@ -3,7 +3,8 @@ import { fetchInstagramMedia } from "@/lib/instagram-api";
 
 export async function POST(req: NextRequest) {
   try {
-    const { url } = await req.json() as { url?: string };
+    const body = await req.json();
+    const url = body?.url;
 
     if (!url || typeof url !== "string") {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await fetchInstagramMedia(url.trim(), "story");
-    return NextResponse.json({ success: true, result });
+    return NextResponse.json({ success: true, result: { ...result, type: "story" } });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
     const status = message.includes("Rate limit") ? 429
