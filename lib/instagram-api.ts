@@ -9,24 +9,33 @@ interface RapidApiErrorResponse {
   status?: number;
 }
 
-function getHeaders(): Record<string, string> {
-  return {
+function getHeaders(includeJson: boolean = false): Record<string, string> {
+  const headers: Record<string, string> = {
     "x-rapidapi-key": RAPIDAPI_KEY || "",
     "x-rapidapi-host": RAPIDAPI_HOST,
   };
+  if (includeJson) {
+    headers["Content-Type"] = "application/json";
+  }
+  return headers;
 }
 
-async function callRapidApi(endpoint: string, params: Record<string, string>): Promise<unknown> {
+async function callRapidApi(
+  endpoint: string,
+  body: Record<string, unknown>
+): Promise<unknown> {
   if (!RAPIDAPI_KEY) {
     throw new Error("RAPIDAPI_KEY is not configured. Please add it to your .env file.");
   }
 
-  const url = new URL(`https://${RAPIDAPI_HOST}${endpoint}`);
-  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+  const url = `https://${RAPIDAPI_HOST}${endpoint}`;
+  console.log("RapidAPI URL:", url);
+  console.log("RapidAPI Body:", JSON.stringify(body));
 
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    headers: getHeaders(),
+  const response = await fetch(url, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(body),
     next: { revalidate: 0 },
   });
 
@@ -52,13 +61,9 @@ async function callRapidApi(endpoint: string, params: Record<string, string>): P
     throw new Error(errorMsg);
   }
 
-  return response.json();
-}
-
-function extractShortcode(url: string): string | null {
-  const postMatch = url.match(/instagram\.com\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/);
-  if (postMatch) return postMatch[1];
-  return null;
+  const data = await response.json();
+  console.log("RapidAPI Response:", JSON.stringify(data));
+  return data;
 }
 
 function extractUsername(url: string): string | null {
@@ -69,14 +74,10 @@ function extractUsername(url: string): string | null {
   return null;
 }
 
-function extractStoryInfo(url: string): { username: string; storyId?: string } | null {
-  const storyMatch = url.match(/instagram\.com\/stories\/([A-Za-z0-9_.]+)\/(\d+)/);
-  if (storyMatch) return { username: storyMatch[1], storyId: storyMatch[2] };
-
-  const storyUserMatch = url.match(/instagram\.com\/stories\/([A-Za-z0-9_.]+)/);
-  if (storyUserMatch) return { username: storyUserMatch[1] };
-
-  return null;
+function extractStoryUsername(url: string): string | null {
+  const storyMatch = url.match(/instagram\.com\/stories\/([A-Za-z0-9_.]+)/);
+  if (storyMatch) return storyMatch[1];
+  return extractUsername(url);
 }
 
 function formatDuration(seconds: number | undefined): string | undefined {
@@ -185,7 +186,6 @@ function deepGet(obj: Record<string, unknown>, ...paths: string[]): unknown {
 }
 
 function extractMediaItems(data: Record<string, unknown>): Array<Record<string, unknown>> {
-  // Try all known response shapes for media items
   const candidates = [
     deepGet(data, "data.items"),
     deepGet(data, "items"),
@@ -220,45 +220,25 @@ export async function fetchInstagramMedia(
     throw new Error("Invalid Instagram URL. Please paste a valid Instagram link.");
   }
 
+  const trimmedUrl = url.trim();
   let apiData: unknown;
 
   switch (type) {
     case "profile": {
-      const username = extractUsername(url);
+      const username = extractUsername(trimmedUrl);
       if (!username) throw new Error("Could not extract username from URL. Use a profile URL like instagram.com/username");
-
-      // Try the URL-based download endpoint first (most common pattern)
-      try {
-        apiData = await callRapidApi("/download", { url: url.trim() });
-      } catch {
-        // Fallback to user info endpoint
-        apiData = await callRapidApi("/api/v1/user/info", { username });
-      }
+      apiData = await callRapidApi("/profile", { username });
       break;
     }
     case "story": {
-      const storyInfo = extractStoryInfo(url);
-      if (!storyInfo) throw new Error("Could not extract story info from URL. Use a story URL like instagram.com/stories/username");
-
-      // Try URL-based endpoint first
-      try {
-        apiData = await callRapidApi("/download", { url: url.trim() });
-      } catch {
-        // Fallback to stories endpoint
-        apiData = await callRapidApi("/api/v1/stories", { username: storyInfo.username });
-      }
+      const username = extractStoryUsername(trimmedUrl);
+      if (!username) throw new Error("Could not extract username from URL. Use a story URL like instagram.com/stories/username");
+      apiData = await callRapidApi("/stories", { username });
       break;
     }
     default: {
-      // video, photo, reels, igtv, carousel — try URL-based endpoint first
-      try {
-        apiData = await callRapidApi("/download", { url: url.trim() });
-      } catch {
-        // Fallback to shortcode-based endpoint
-        const shortcode = extractShortcode(url);
-        if (!shortcode) throw new Error("Could not extract post ID from URL. Please use a valid Instagram post, reel, or video URL.");
-        apiData = await callRapidApi("/api/v1/media", { shortcode });
-      }
+      // video, photo, reels, igtv, carousel — use POST /links
+      apiData = await callRapidApi("/links", { url: trimmedUrl });
       break;
     }
   }
@@ -295,17 +275,17 @@ export async function fetchInstagramMedia(
     if (!items.length) throw new Error("No stories found. They may have expired or the account may be private.");
 
     const story = items[0];
-    // If URL-based endpoint returned a single item with download url, use it directly
     if (typeof story.url === "string" && story.url.startsWith("http")) {
       const isVideo = !!(story.media_type === 2 || story.type === "video" || story.video_url);
+      const dur = (story.video_duration ?? story.duration) as number | undefined;
       return {
         thumbnail: (getImageUrl(story) ?? story.thumbnail) as string | undefined,
         title: "Instagram Story",
         author: getUsername(response, story),
-        duration: isVideo ? formatDuration(story.video_duration as number | undefined ?? story.duration as number | undefined) : undefined,
+        duration: isVideo ? formatDuration(dur) : undefined,
         quality: isVideo ? "720p" : "Full Resolution",
-        fileSize: estimateFileSize(isVideo ? "video" : "image", undefined, undefined, story.video_duration as number | undefined ?? story.duration as number | undefined),
-        downloadUrl: story.url || story.video_url as string || getImageUrl(story) || "",
+        fileSize: estimateFileSize(isVideo ? "video" : "image", undefined, undefined, dur),
+        downloadUrl: story.url || (story.video_url as string) || getImageUrl(story) || "",
         mediaType: isVideo ? "video" : "image",
       };
     }
