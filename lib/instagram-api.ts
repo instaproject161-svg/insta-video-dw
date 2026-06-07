@@ -9,35 +9,28 @@ interface RapidApiErrorResponse {
   status?: number;
 }
 
-function getHeaders(includeJson: boolean = false): Record<string, string> {
-  const headers: Record<string, string> = {
+function getHeaders(): Record<string, string> {
+  return {
     "x-rapidapi-key": RAPIDAPI_KEY || "",
     "x-rapidapi-host": RAPIDAPI_HOST,
   };
-  if (includeJson) {
-    headers["Content-Type"] = "application/json";
-  }
-  return headers;
 }
 
-async function callRapidApi(
-  endpoint: string,
-  body: Record<string, unknown>
-): Promise<unknown> {
+async function callRapidApi(url: string): Promise<unknown> {
   if (!RAPIDAPI_KEY) {
     throw new Error("RAPIDAPI_KEY is not configured. Please add it to your .env file.");
   }
 
-  const url = `https://${RAPIDAPI_HOST}${endpoint}`;
-  console.log("RapidAPI URL:", url);
-  console.log("RapidAPI Body:", JSON.stringify(body));
+  const requestUrl = `https://${RAPIDAPI_HOST}/api/instagram/?url=${encodeURIComponent(url)}`;
+  console.log("RapidAPI URL:", requestUrl);
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: getHeaders(true),
-    body: JSON.stringify(body),
+  const response = await fetch(requestUrl, {
+    method: "GET",
+    headers: getHeaders(),
     next: { revalidate: 0 },
   });
+
+  console.log("RapidAPI Response Status:", response.status, response.statusText);
 
   if (response.status === 429) {
     throw new Error("Rate limit reached. Please wait a moment and try again.");
@@ -47,23 +40,30 @@ async function callRapidApi(
     throw new Error("Access denied. The content may be from a private account or the URL is invalid.");
   }
 
+  const responseText = await response.text();
+  console.log("RapidAPI Response Body:", responseText);
+
   if (!response.ok) {
     let errorMsg = `API returned status ${response.status}`;
     try {
-      const text = await response.text();
-      const errBody = JSON.parse(text) as RapidApiErrorResponse;
+      const errBody = JSON.parse(responseText) as RapidApiErrorResponse;
       if (errBody.message || errBody.error) {
         errorMsg = errBody.message || errBody.error || errorMsg;
       }
     } catch {
-      // ignore parse errors
+      // Use response text as error if not JSON
+      if (responseText) {
+        errorMsg = responseText;
+      }
     }
     throw new Error(errorMsg);
   }
 
-  const data = await response.json();
-  console.log("RapidAPI Response:", JSON.stringify(data));
-  return data;
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    throw new Error(`Failed to parse API response: ${responseText.substring(0, 200)}`);
+  }
 }
 
 function extractUsername(url: string): string | null {
@@ -221,27 +221,20 @@ export async function fetchInstagramMedia(
   }
 
   const trimmedUrl = url.trim();
-  let apiData: unknown;
 
-  switch (type) {
-    case "profile": {
-      const username = extractUsername(trimmedUrl);
-      if (!username) throw new Error("Could not extract username from URL. Use a profile URL like instagram.com/username");
-      apiData = await callRapidApi("/profile", { username });
-      break;
-    }
-    case "story": {
-      const username = extractStoryUsername(trimmedUrl);
-      if (!username) throw new Error("Could not extract username from URL. Use a story URL like instagram.com/stories/username");
-      apiData = await callRapidApi("/stories", { username });
-      break;
-    }
-    default: {
-      // video, photo, reels, igtv, carousel — use POST /links
-      apiData = await callRapidApi("/links", { url: trimmedUrl });
-      break;
-    }
+  // Validate URL format for specific types
+  if (type === "profile") {
+    const username = extractUsername(trimmedUrl);
+    if (!username) throw new Error("Could not extract username from URL. Use a profile URL like instagram.com/username");
   }
+
+  if (type === "story") {
+    const username = extractStoryUsername(trimmedUrl);
+    if (!username) throw new Error("Could not extract username from URL. Use a story URL like instagram.com/stories/username");
+  }
+
+  // All types use the same endpoint: GET /api/instagram/?url=<url>
+  const apiData = await callRapidApi(trimmedUrl);
 
   const response = apiData as Record<string, unknown>;
 
