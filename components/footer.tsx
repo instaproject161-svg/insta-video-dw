@@ -19,15 +19,16 @@ const companyLinks = [
 ];
 
 export function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="border-t border-border/40 bg-background">
+    <footer className="border-t border-border/40 bg-background" role="contentinfo">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-          {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
+            <Link href="/" className="flex items-center gap-2.5 mb-4" aria-label="ReelSave Home">
               <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
-                <Play className="w-4 h-4 text-primary" fill="currentColor" />
+                <Play className="w-4 h-4 text-primary" fill="currentColor" aria-hidden="true" />
               </div>
               <span className="text-xl font-bold text-foreground">ReelSave</span>
             </Link>
@@ -41,25 +42,23 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Downloaders */}
-          <div>
+          <nav aria-label="Downloader tools">
             <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">Downloaders</h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2.5" role="list">
               {downloaderLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 group">
-                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
-          {/* Company */}
-          <div>
+          <nav aria-label="Company links">
             <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">Company</h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2.5" role="list">
               {companyLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -67,20 +66,14 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Admin
-                </Link>
-              </li>
             </ul>
-          </div>
+          </nav>
         </div>
 
-        {/* Bottom */}
         <div className="mt-10 pt-8 border-t border-border/40 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} ReelSave. All rights reserved.
+              &copy; {currentYear} ReelSave. All rights reserved.
             </p>
             <div className="flex items-center gap-5">
               <Link href="/privacy-policy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>

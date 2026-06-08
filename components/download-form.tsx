@@ -31,28 +31,45 @@ export function DownloadForm({ config }: DownloadFormProps) {
     setResult(null);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
       const response = await fetch(config.apiPath, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to process the URL. Please try again.");
+        throw new Error(data.error || `Request failed with status ${response.status}`);
+      }
+
+      if (!data.success || !data.result) {
+        throw new Error(data.error || "Invalid response from server");
       }
 
       setResult(data.result as DownloadResult);
       setState("success");
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      if (err instanceof Error && err.name === "AbortError") {
+        setErrorMessage("Request timed out. Please try again.");
+      } else {
+        setErrorMessage(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      }
       setState("error");
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleDownload();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleDownload();
+    }
   };
 
   const handleClear = () => {
@@ -64,9 +81,13 @@ export function DownloadForm({ config }: DownloadFormProps) {
 
   const handleCopyUrl = async () => {
     if (!url) return;
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      console.error("Failed to copy URL");
+    }
   };
 
   const handleRetry = () => {
@@ -77,11 +98,10 @@ export function DownloadForm({ config }: DownloadFormProps) {
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
-      {/* Input Row */}
       {state !== "success" && (
         <div className="flex flex-col sm:flex-row gap-3 p-2 glass rounded-2xl shadow-xl shadow-black/20">
           <div className="relative flex-1">
-            <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
             <Input
               type="url"
               placeholder={config.placeholder}
@@ -92,6 +112,9 @@ export function DownloadForm({ config }: DownloadFormProps) {
               }}
               onKeyDown={handleKeyDown}
               disabled={state === "loading"}
+              aria-label="Instagram URL"
+              aria-describedby="url-validation"
+              aria-invalid={!isValidUrl && url.length > 0}
               className="w-full h-14 pl-11 pr-20 bg-transparent border-0 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-60"
             />
             {url && state !== "loading" && (
@@ -100,15 +123,18 @@ export function DownloadForm({ config }: DownloadFormProps) {
                   onClick={handleCopyUrl}
                   className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
                   title="Copy URL"
+                  aria-label="Copy URL to clipboard"
+                  type="button"
                 >
-                  {copied ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
+                  {copied ? <CheckCircle2 className="w-4 h-4 text-primary" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
                 </button>
                 <button
                   onClick={handleClear}
                   className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
                   aria-label="Clear input"
+                  type="button"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
             )}
@@ -117,15 +143,16 @@ export function DownloadForm({ config }: DownloadFormProps) {
             onClick={handleDownload}
             disabled={!url.trim() || !isValidUrl || state === "loading"}
             className="h-14 px-6 rounded-xl font-semibold transition-all duration-300 shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 disabled:opacity-40"
+            type="button"
           >
             {state === "loading" ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" aria-hidden="true" />
                 Processing...
               </>
             ) : (
               <>
-                <Download className="w-5 h-5 mr-2" />
+                <Download className="w-5 h-5 mr-2" aria-hidden="true" />
                 {config.buttonLabel}
               </>
             )}
@@ -133,9 +160,8 @@ export function DownloadForm({ config }: DownloadFormProps) {
         </div>
       )}
 
-      {/* Loading Skeleton */}
       {state === "loading" && (
-        <div className="w-full glass-card rounded-2xl p-4 animate-pulse">
+        <div className="w-full glass-card rounded-2xl p-4 animate-pulse" aria-live="polite" aria-busy="true">
           <div className="flex gap-4">
             <div className="w-32 h-28 rounded-xl bg-secondary shrink-0" />
             <div className="flex-1 space-y-3 py-1">
@@ -151,29 +177,29 @@ export function DownloadForm({ config }: DownloadFormProps) {
         </div>
       )}
 
-      {/* Success Result Card */}
       {state === "success" && result && (
-        <ResultCard result={result} onReset={handleClear} />
+        <div aria-live="polite">
+          <ResultCard result={result} onReset={handleClear} />
+        </div>
       )}
 
-      {/* Status Messages */}
-      <div className="min-h-[22px] px-1">
+      <div className="min-h-[22px] px-1" id="url-validation">
         {url && !isValidUrl && state !== "loading" && (
-          <p className="text-sm text-destructive flex items-center gap-1.5">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <p className="text-sm text-destructive flex items-center gap-1.5" role="alert">
+            <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
             Please enter a valid Instagram URL
           </p>
         )}
         {url && isValidUrl && state === "idle" && (
           <p className="text-sm text-primary flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
             Valid Instagram URL detected
           </p>
         )}
         {state === "error" && errorMessage && (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between" role="alert">
             <p className="text-sm text-destructive flex items-center gap-1.5">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+              <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
               {errorMessage}
             </p>
             <button
@@ -181,20 +207,20 @@ export function DownloadForm({ config }: DownloadFormProps) {
               className={cn(
                 "flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary/60"
               )}
+              type="button"
             >
-              <RefreshCw className="w-3 h-3" />
+              <RefreshCw className="w-3 h-3" aria-hidden="true" />
               Retry
             </button>
           </div>
         )}
       </div>
 
-      {/* Trust badges */}
       {state !== "success" && (
-        <div className="flex flex-wrap items-center justify-center gap-5 pt-1 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-5 pt-1 text-sm text-muted-foreground" role="list" aria-label="Features">
           {["No Watermark", "HD Quality", "Free Forever", "No Login Required"].map((label) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+            <div key={label} className="flex items-center gap-1.5" role="listitem">
+              <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden="true" />
               <span className="text-xs">{label}</span>
             </div>
           ))}
@@ -204,5 +230,4 @@ export function DownloadForm({ config }: DownloadFormProps) {
   );
 }
 
-
-export { DownloadForm }
+export { DownloadForm };

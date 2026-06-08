@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
-import { Download, Eye, TrendingUp, Activity, Film, Image, Video, BookOpen, Tv, LayoutGrid, User } from "lucide-react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Admin Dashboard | ReelSave",
-  robots: { index: false, follow: false },
-};
+import { useState, useEffect } from "react";
+import { Download, Eye, TrendingUp, Activity, Film, Image, Video, BookOpen, Tv, LayoutGrid, User, Lock, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+const ADMIN_PASSWORD = "reelsave2024";
 
 const stats = [
   { label: "Total Downloads", value: "2,847,391", change: "+12.4%", icon: Download, color: "text-primary" },
@@ -34,23 +35,78 @@ const recentActivity = [
   { action: "Reel downloaded", url: "instagram.com/reel/pqr901", time: "58s ago", status: "success" },
 ];
 
-export default function AdminPage() {
+function LoginPage({ onLogin }: { onLogin: () => void }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    setTimeout(() => {
+      if (password === ADMIN_PASSWORD) {
+        sessionStorage.setItem("adminAuth", "true");
+        onLogin();
+      } else {
+        setError("Invalid password");
+      }
+      setLoading(false);
+    }, 500);
+  };
+
+  return (
+    <main className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center">
+          <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-6 h-6 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Admin Access</h1>
+          <p className="text-sm text-muted-foreground mt-1">Enter password to continue</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="h-12"
+            autoFocus
+          />
+          {error && <p className="text-sm text-destructive text-center">{error}</p>}
+          <Button type="submit" className="w-full h-12" disabled={loading}>
+            {loading ? "Verifying..." : "Access Dashboard"}
+          </Button>
+        </form>
+      </div>
+    </main>
+  );
+}
+
+function Dashboard({ onLogout }: { onLogout: () => void }) {
   return (
     <main className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-muted-foreground mt-1 text-sm">ReelSave analytics overview — mock data</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            Live
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              Live
+            </div>
+            <Button variant="outline" size="sm" onClick={onLogout} className="gap-2">
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           {stats.map((s) => (
             <div key={s.label} className="glass-card rounded-2xl p-5">
@@ -65,7 +121,6 @@ export default function AdminPage() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Top Downloaders */}
           <div className="glass-card rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-foreground mb-6">Top Downloader Types</h2>
             <div className="space-y-4">
@@ -92,7 +147,6 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Recent Activity */}
           <div className="glass-card rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-foreground mb-6">Recent Activity</h2>
             <div className="space-y-3">
@@ -114,4 +168,37 @@ export default function AdminPage() {
       </div>
     </main>
   );
+}
+
+export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const auth = sessionStorage.getItem("adminAuth");
+    if (auth === "true") {
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogin = () => setIsAuthenticated(true);
+  const handleLogout = () => {
+    sessionStorage.removeItem("adminAuth");
+    setIsAuthenticated(false);
+  };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </main>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  return <Dashboard onLogout={handleLogout} />;
 }
